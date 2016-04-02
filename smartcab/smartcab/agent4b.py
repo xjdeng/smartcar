@@ -19,6 +19,10 @@ class LearningAgent(Agent):
         self.state0 = None
         self.action0 = None
         self.Q = {}
+        self.trials = -1
+        self.max_trials = 100
+        self.x_trials = range(0,self.max_trials)
+        self.y_trials = range(0,self.max_trials)
         for i in ['forward','left','right']:
             for j in ['green','red']:
                 for k in self.env.valid_actions:
@@ -29,6 +33,7 @@ class LearningAgent(Agent):
         self.planner.route_to(destination)
         # TODO: Prepare for a new trip; reset any variables here, if required
         self.none_count = 0
+        self.trials = self.trials + 1
         
     def update(self, t):
         # Gather inputs
@@ -38,7 +43,8 @@ class LearningAgent(Agent):
 
         # TODO: Update state
         self.state = (self.next_waypoint, inputs['light'])
-        
+        self.learning_rate = 1 - float(self.trials)/float(self.max_trials)
+        # self.discount_factor = float(self.trials)/float(self.max_trials)
         # TODO: Select action according to your policy
         newQ = -9999999999
         action = None
@@ -47,6 +53,7 @@ class LearningAgent(Agent):
             action = random.choice(Environment.valid_actions)
             newQ = self.default_Q
         else:      
+            # for i2 in [None, self.next_waypoint]:
             for i2 in self.env.valid_actions:
                 if self.Q[(self.state,i2)] >= newQ:
                     newQ = self.Q[(self.state,i2)]
@@ -67,6 +74,10 @@ class LearningAgent(Agent):
             oldQ = self.Q[(self.state0,self.action0)]
             self.Q[(self.state0,self.action0)] = oldQ + self.learning_rate*(reward + self.discount_factor*newQ - oldQ)
         (self.state0, self.action0) = (self.state, action)
+        if (deadline == 0) & (reward < 10):
+            self.y_trials[self.trials] = 0
+        else:
+            self.y_trials[self.trials] = 1
         print "LearningAgent.update(): deadline = {}, inputs = {}, action = {}, reward = {}".format(deadline, inputs, action, reward)  # [debug]
 
 
@@ -80,7 +91,15 @@ def run():
 
     # Now simulate it
     sim = Simulator(e, update_delay=1.0)  # reduce update_delay to speed up simulation
-    sim.run(n_trials=100)  # press Esc or close pygame window to quit
+    sim.run(n_trials=a.max_trials)  # press Esc or close pygame window to quit
+    import pylab as pl
+    pl.figure()
+    pl.scatter(a.x_trials,a.y_trials)
+    pl.legend()
+    pl.xlabel('Trial #')
+    pl.ylabel('Success = 1, Failure = 0')
+    pl.title("Training progress report")
+    pl.show()
 
 
 if __name__ == '__main__':
