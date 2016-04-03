@@ -11,23 +11,30 @@ class LearningAgent(Agent):
         self.color = 'red'  # override color
         self.planner = RoutePlanner(self.env, self)  # simple route planner to get next_waypoint
         # TODO: Initialize any additional variables here
-        self.learning_rate = 0.5
-        self.discount_factor = 0.5
+        self.learning_rate = 1
+        self.discount_factor = 0.25
+        self.default_Q = 3
+        self.none_count = 0
+        self.max_none = 6
         self.state0 = None
         self.action0 = None
         self.Q = {}
+        self.trials = -1
+        self.max_trials = 100
+        self.x_trials = range(0,self.max_trials)
+        self.y_trials = range(0,self.max_trials)
+        self.dl = max(0.01,1.0/float(self.max_trials))
         for i in ['forward','left','right']:
             for j in ['green','red']:
                 for k in self.env.valid_actions:
-                    for l in self.env.valid_actions:
-                        for m in self.env.valid_actions:
-                            for n in self.env.valid_actions:                                
-                                self.Q[((i,j,k,l,m),n)] = 1.5
+                    self.Q[(i,j),k] = self.default_Q
     
 
     def reset(self, destination=None):
         self.planner.route_to(destination)
         # TODO: Prepare for a new trip; reset any variables here, if required
+        self.none_count = 0
+        self.trials = self.trials + 1
         
     def update(self, t):
         # Gather inputs
@@ -36,21 +43,29 @@ class LearningAgent(Agent):
         deadline = self.env.get_deadline(self)
 
         # TODO: Update state
-        self.state = (self.next_waypoint, inputs['light'], inputs['oncoming'], inputs['left'], inputs['right'])
-        
+        self.state = (self.next_waypoint, inputs['light'])
+        self.learning_rate = self.learning_rate - self.dl
+        # self.discount_factor = float(self.trials)/float(self.max_trials)
         # TODO: Select action according to your policy
         newQ = -9999999999
         action = None
         
-
-        (i,j,k,l,m) = (self.state[0], self.state[1], self.state[2], self.state[3], self.state[4])
-        
-        for i2 in [None, self.next_waypoint]:
-            if self.Q[(self.state,i2)] >= newQ:
-                newQ = self.Q[(self.state,i2)]
-                action = i2
-                print newQ
-               
+        if self.Q[(self.state,None)] == self.Q[(self.state,'left')] == self.Q[(self.state,'right')] == self.Q[(self.state,'forward')] == self.default_Q:
+            action = random.choice(Environment.valid_actions)
+            newQ = self.default_Q
+        else:      
+            # for i2 in [None, self.next_waypoint]:
+            for i2 in self.env.valid_actions:
+                if self.Q[(self.state,i2)] >= newQ:
+                    newQ = self.Q[(self.state,i2)]
+                    action = i2
+        if action == None:
+            self.none_count = self.none_count + 1
+        else:
+            self.none_count = 0
+        if self.none_count > self.max_none:
+            action = 'right'
+       
 
         # Execute action and get reward
         reward = self.env.act(self, action)
@@ -60,6 +75,10 @@ class LearningAgent(Agent):
             oldQ = self.Q[(self.state0,self.action0)]
             self.Q[(self.state0,self.action0)] = oldQ + self.learning_rate*(reward + self.discount_factor*newQ - oldQ)
         (self.state0, self.action0) = (self.state, action)
+        if (deadline == 0) & (reward < 10):
+            self.y_trials[self.trials] = 0
+        else:
+            self.y_trials[self.trials] = 1
         print "LearningAgent.update(): deadline = {}, inputs = {}, action = {}, reward = {}".format(deadline, inputs, action, reward)  # [debug]
 
 
@@ -73,7 +92,15 @@ def run():
 
     # Now simulate it
     sim = Simulator(e, update_delay=1.0)  # reduce update_delay to speed up simulation
-    sim.run(n_trials=110)  # press Esc or close pygame window to quit
+    sim.run(n_trials=a.max_trials)  # press Esc or close pygame window to quit
+    import pylab as pl
+    pl.figure()
+    pl.scatter(a.x_trials,a.y_trials)
+    pl.legend()
+    pl.xlabel('Trial #')
+    pl.ylabel('Success = 1, Failure = 0')
+    pl.title("Training progress report")
+    pl.show()
 
 
 if __name__ == '__main__':
