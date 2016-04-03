@@ -15,12 +15,16 @@ class LearningAgent(Agent):
         self.learning_rate = 0.5
         self.default_Q = 2
         self.none_count = 0
+        self.max_right = 4
         self.max_none = 6
         self.state0 = None
         self.action0 = None
         self.reward0 = None
-        self.max_trials = 100
         self.Q = {}
+        self.trials = -1
+        self.max_trials = 100
+        self.x_trials = range(0,self.max_trials)
+        self.y_trials = range(0,self.max_trials)
         for i in ['forward','left','right']:
             for j in ['green','red']:
                 for k in self.env.valid_actions:
@@ -34,6 +38,7 @@ class LearningAgent(Agent):
             oldQ = self.Q[(self.state0,self.action0)]
             self.Q[(self.state0,self.action0)] = oldQ + self.learning_rate*(self.reward0 - oldQ)
         self.none_count = 0
+        self.trials = self.trials + 1
         (self.state0, self.action0, self.reward0) = (None, None, None)
         
         
@@ -73,6 +78,10 @@ class LearningAgent(Agent):
             oldQ = self.Q[(self.state0,self.action0)]
             self.Q[(self.state0,self.action0)] = oldQ + self.learning_rate*(self.reward0 + self.discount_factor*newQ - oldQ)
         (self.state0, self.action0, self.reward0) = (self.state, action, reward)
+        if (deadline == 0) & (reward < 10):
+            self.y_trials[self.trials] = 0
+        else:
+            self.y_trials[self.trials] = 1
         print "LearningAgent.update(): deadline = {}, inputs = {}, action = {}, reward = {}".format(deadline, inputs, action, reward)  # [debug]
 
 
@@ -86,8 +95,16 @@ def run():
 
     # Now simulate it
     # sim = Simulator(e, update_delay=1.0)  # reduce update_delay to speed up simulation
-    sim = Simulator(e, update_delay=1.0)
+    sim = Simulator(e, update_delay=0.01)
     sim.run(n_trials=a.max_trials)  # press Esc or close pygame window to quit
+    import pylab as pl
+    pl.figure()
+    pl.scatter(a.x_trials,a.y_trials)
+    pl.legend()
+    pl.xlabel('Trial #')
+    pl.ylabel('Success = 1, Failure = 0')
+    pl.title("Training progress report")
+    pl.show()
 
 
 if __name__ == '__main__':
