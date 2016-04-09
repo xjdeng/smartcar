@@ -76,7 +76,7 @@ class LearningAgent(Agent):
         # TODO: Learn policy based on state, action, reward
         if (self.state0, self.action0, self.reward0) != (None, None, None):
             oldQ = self.Q[(self.state0,self.action0)]
-            self.Q[(self.state0,self.action0)] = oldQ + self.learning_rate*(self.reward0 + self.discount_factor*newQ - oldQ)
+            self.Q[(self.state0,self.action0)] = (1-self.learning_rate)*oldQ + self.learning_rate*(self.reward0 + self.discount_factor*newQ)
         (self.state0, self.action0, self.reward0) = (self.state, action, reward)
         if (deadline == 0) & (reward < 10):
             self.y_trials[self.trials] = 0

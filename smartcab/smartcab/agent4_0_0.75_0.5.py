@@ -66,12 +66,7 @@ class LearningAgent(Agent):
             self.none_count = self.none_count + 1
         else:
             self.none_count = 0
-        if action == 'right':
-            self.right_count = self.right_count + 1
-        else:
-            self.right_count = 0
-        if self.none_count > self.max_none:
-            action = random.choice(Environment.valid_actions)
+
 
         # Execute action and get reward
         reward = self.env.act(self, action)
@@ -80,7 +75,7 @@ class LearningAgent(Agent):
         # TODO: Learn policy based on state, action, reward
         if (self.state0, self.action0, self.reward0) != (None, None, None):
             oldQ = self.Q[(self.state0,self.action0)]
-            self.Q[(self.state0,self.action0)] = oldQ + self.learning_rate*(self.reward0 + self.discount_factor*newQ - oldQ)
+            self.Q[(self.state0,self.action0)] = (1-self.learning_rate)*oldQ + self.learning_rate*(self.reward0 + self.discount_factor*newQ)
         (self.state0, self.action0, self.reward0) = (self.state, action, reward)
         if (deadline == 0) & (reward < 10):
             self.y_trials[self.trials] = 0
