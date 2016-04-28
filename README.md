@@ -8,8 +8,11 @@ Requires Python 2.7 and pygame
 
 
 $ git clone http://github.com/xjdeng/smartcar.git
+
 $ cd smartcar
+
 $ python smartcab/agent.py
+
 
 ## Further Documentation ##
 
