@@ -11,7 +11,7 @@ class QLearner(object):
         self.state0 = None
         self.action0 = None
         self.reward0 = None
-        self.default_q = default_q    
+        self.default_q = 0.1    
     
     def getQ(self,state,action):
         if (state,action) not in self.Q:

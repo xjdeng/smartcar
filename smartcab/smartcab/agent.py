@@ -15,9 +15,14 @@ class LearningAgent(Agent):
         self.discount_factor = 0.5
         self.learning_rate = 0.5
         self.default_Q = 2
+        self.Q0 = {}
         self.none_count = 0
         self.max_none = 6
-        self.Q = QLearner(actions = self.env.valid_actions, learning = self.learning_rate, discount = self.discount_factor, default_q= self.default_Q)
+        for i in ['forward','left','right']:
+            for j in ['green','red']:
+                for k in self.env.valid_actions:
+                    self.Q0[(i,j),k] = self.default_Q
+        self.Q = QLearner(self.env.valid_actions, self.Q0, self.learning_rate, self.discount_factor)
 
     def reset(self, destination=None):
         self.planner.route_to(destination)
