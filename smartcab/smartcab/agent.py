@@ -15,14 +15,9 @@ class LearningAgent(Agent):
         self.discount_factor = 0.5
         self.learning_rate = 0.5
         self.default_Q = 2
-        self.Q0 = {}
         self.none_count = 0
         self.max_none = 6
-        for i in ['forward','left','right']:
-            for j in ['green','red']:
-                for k in self.env.valid_actions:
-                    self.Q0[(i,j),k] = self.default_Q
-        self.Q = QLearner(self.Q0, self.env.valid_actions, self.discount_factor, self.learning_rate)
+        self.Q = QLearner(actions = self.env.valid_actions, learning = self.learning_rate, discount = self.discount_factor, default_q= self.default_Q)
 
     def reset(self, destination=None):
         self.planner.route_to(destination)
@@ -68,7 +63,7 @@ def run():
     e.set_primary_agent(a, enforce_deadline=True)  # set agent to track
 
     # Now simulate it
-    sim = Simulator(e, update_delay=1.0)  # reduce update_delay to speed up simulation
+    sim = Simulator(e, update_delay=0.01)  # reduce update_delay to speed up simulation
     sim.run(n_trials=100)  # press Esc or close pygame window to quit
 
 
