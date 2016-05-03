@@ -19,9 +19,6 @@ class QLearner(object):
         return self.Q[(state,action)]
     
     def reset(self):
-        if (self.state0, self.action0, self.reward0) != (None, None, None):
-            oldQ = self.getQ(self.state0,self.action0)
-            self.Q[(self.state0,self.action0)] = oldQ + self.learning*(self.reward0 - oldQ)
         (self.state0, self.action0, self.reward0) = (None, None, None)
     
     def pickAction(self, state):
